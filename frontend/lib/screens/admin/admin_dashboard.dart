@@ -22,11 +22,21 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () {
+    _refreshData();
+  }
+
+  Future<void> _refreshData() async {
+    try {
       final provider = Provider.of<ComplaintProvider>(context, listen: false);
-      provider.fetchComplaints();
-      provider.fetchEngineers();
-    });
+      print("Refreshing Dashboard Data...");
+      await Future.wait([
+        provider.fetchComplaints(),
+        provider.fetchEngineers(),
+      ]);
+      print("Refresh Complete!");
+    } catch (e) {
+      print("Refresh Error: $e");
+    }
   }
 
   @override
@@ -53,10 +63,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
           )
         ],
       ),
-      body: _currentIndex == 0 ? _buildComplaintsSection() : _buildEngineersSection(),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: _currentIndex == 0 ? _buildComplaintsSection() : _buildEngineersSection(),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+          _refreshData(); // Re-fetch when switching tabs
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.list), label: "Complaints"),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: "Engineers"),
@@ -90,7 +106,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildEngineersSection() {
     final engineers = Provider.of<ComplaintProvider>(context).engineers;
     if (engineers.isEmpty) {
-      return const Center(child: Text("No engineers registered yet."));
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          SizedBox(height: 200),
+          Center(child: Text("No engineers registered yet. Pull to refresh.")),
+        ],
+      );
     }
     return ListView.builder(
       padding: const EdgeInsets.all(10),

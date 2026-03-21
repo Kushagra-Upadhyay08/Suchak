@@ -22,11 +22,19 @@ class ComplaintProvider extends ChangeNotifier {
   }
 
   Future<void> fetchEngineers() async {
-    final response = await _apiService.get('/auth/engineers');
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      _engineers = data.map((json) => User.fromJson(json)).toList();
-      notifyListeners();
+    try {
+      final response = await _apiService.get('/auth/engineers');
+      print('Fetch Engineers Response: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        print('Engineers Count: ${data.length}');
+        _engineers = data.map((json) => User.fromJson(json)).toList();
+        notifyListeners();
+      } else {
+        print('Fetch Engineers Failed: ${response.body}');
+      }
+    } catch (e) {
+      print('Fetch Engineers Error: $e');
     }
   }
 

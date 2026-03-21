@@ -9,6 +9,7 @@ const { verifyJWT, checkRole } = require('../middleware/auth');
 router.post('/register', async (req, res) => {
   try {
     const { name, password, role, employeeId } = req.body;
+    console.log('Registration Payload:', { name, role, employeeId });
     
     let user = await User.findOne({ name });
     if (user) {
@@ -39,8 +40,10 @@ router.post('/register', async (req, res) => {
 
 // Get Engineers (Admin only)
 router.get('/engineers', verifyJWT, checkRole(['admin']), async (req, res) => {
+  console.log('GET /engineers request received from admin:', req.user.userId);
   try {
-    const engineers = await User.find({ role: 'engineer' }).select('name employeeId _id');
+    const engineers = await User.find({ role: 'engineer' }).select('name employeeId role _id');
+    console.log(`Found ${engineers.length} engineers`);
     res.json(engineers);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching engineers' });
@@ -58,7 +61,7 @@ router.post('/login', async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET || 'secretkey', { expiresIn: '7d' });
-    res.json({ token, user: { id: user._id, name: user.name, role: user.role } });
+    res.json({ token, user: { id: user._id, name: user.name, role: user.role, employeeId: user.employeeId } });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
