@@ -110,6 +110,22 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
               Text(complaint.description),
               const SizedBox(height: 10),
               Text("Created: ${complaint.createdAt.toLocal().toString().split('.')[0]}"),
+              if (complaint.status == 'RESOLVED' && complaint.resolutionImage != null) ...[
+                const Divider(height: 40),
+                const Text("Resolution Proof:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.memory(
+                    base64Decode(complaint.resolutionImage!),
+                    width: double.infinity,
+                    height: 300,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text("Resolved at: ${complaint.resolvedAt?.toLocal().toString().split('.')[0] ?? 'N/A'}"),
+              ],
             ],
           ),
         ),
