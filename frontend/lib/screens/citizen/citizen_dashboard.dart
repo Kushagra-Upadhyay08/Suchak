@@ -24,6 +24,10 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
     });
   }
 
+  Future<void> _refresh() async {
+    await Provider.of<ComplaintProvider>(context, listen: false).fetchComplaints();
+  }
+
   @override
   Widget build(BuildContext context) {
     final complaintProvider = Provider.of<ComplaintProvider>(context);
@@ -50,27 +54,37 @@ class _CitizenDashboardState extends State<CitizenDashboard> {
           )
         ],
       ),
-      body: complaintProvider.complaints.isEmpty
-          ? const Center(child: Text("No complaints yet. Report one!"))
-          : ListView.builder(
-              itemCount: complaintProvider.complaints.length,
-              itemBuilder: (context, index) {
-                final complaint = complaintProvider.complaints[index];
-                return Card(
-                  margin: const EdgeInsets.all(10),
-                  child: ListTile(
-                    onTap: () => _showComplaintDetails(complaint),
-                    title: Text(complaint.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text("Status: ${complaint.status}\nCreated: ${complaint.createdAt.toString().split('.')[0]}"),
-                    trailing: Chip(
-                      label: Text("${complaint.daysTaken}d"),
-                      backgroundColor: Colors.blue.shade100,
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: complaintProvider.complaints.isEmpty
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 200),
+                  Center(child: Text("No complaints yet. Report one! Pull to refresh.")),
+                ],
+              )
+            : ListView.builder(
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: complaintProvider.complaints.length,
+                itemBuilder: (context, index) {
+                  final complaint = complaintProvider.complaints[index];
+                  return Card(
+                    margin: const EdgeInsets.all(10),
+                    child: ListTile(
+                      onTap: () => _showComplaintDetails(complaint),
+                      title: Text(complaint.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text("Status: ${complaint.status}\nCreated: ${complaint.createdAt.toString().split('.')[0]}"),
+                      trailing: Chip(
+                        label: Text("${complaint.daysTaken}d"),
+                        backgroundColor: complaint.status == 'RESOLVED' ? Colors.green.shade100 : Colors.blue.shade100,
+                      ),
+                      isThreeLine: true,
                     ),
-                    isThreeLine: true,
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateComplaintScreen()));

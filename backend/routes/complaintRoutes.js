@@ -165,17 +165,28 @@ router.put('/:id/resolve', verifyJWT, checkRole(['engineer']), async (req, res) 
       currentLocation.longitude
     );
 
+    console.log(`Resolution Distance Check for "${complaint.title}":`);
+    console.log(`- Complaint Location: ${complaint.location.latitude}, ${complaint.location.longitude}`);
+    console.log(`- Engineer Location: ${currentLocation.latitude}, ${currentLocation.longitude}`);
+    console.log(`- Calculated Distance: ${distance.toFixed(2)}m (Threshold: 30m)`);
+
     if (distance > 30) {
-      return res.status(400).json({ message: `Too far! You are ${Math.round(distance)}m away. Must be within 30m.` });
+      return res.status(400).json({ 
+        message: `Too far! You are ${Math.round(distance)}m away. Must be within 30m.`,
+        calcDistance: distance
+      });
     }
 
     complaint.status = 'RESOLVED';
     complaint.resolutionImage = resolutionImage;
     complaint.resolvedAt = new Date();
     await complaint.save();
+    
+    console.log(`- SUCCESSFULLY RESOLVED: "${complaint.title}"`);
     res.json(complaint);
   } catch (error) {
-    res.status(500).json({ message: 'Error resolving complaint' });
+    console.log(`- RESOLUTION ERROR for "${req.params.id}":`, error);
+    res.status(500).json({ message: 'Error resolving complaint', error: error.message });
   }
 });
 

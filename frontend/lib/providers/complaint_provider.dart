@@ -22,19 +22,11 @@ class ComplaintProvider extends ChangeNotifier {
   }
 
   Future<void> fetchEngineers() async {
-    try {
-      final response = await _apiService.get('/auth/engineers');
-      print('Fetch Engineers Response: ${response.statusCode}');
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        print('Engineers Count: ${data.length}');
-        _engineers = data.map((json) => User.fromJson(json)).toList();
-        notifyListeners();
-      } else {
-        print('Fetch Engineers Failed: ${response.body}');
-      }
-    } catch (e) {
-      print('Fetch Engineers Error: $e');
+    final response = await _apiService.get('/auth/engineers');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      _engineers = data.map((json) => User.fromJson(json)).toList();
+      notifyListeners();
     }
   }
 
@@ -67,7 +59,10 @@ class ComplaintProvider extends ChangeNotifier {
   }
 
   Future<bool> confirmDuplicate(String originalId) async {
-    final response = await _apiService.post('/complaints/$originalId/confirm-duplicate', {});
+    final response = await _apiService.post(
+      '/complaints/$originalId/confirm-duplicate',
+      {},
+    );
     if (response.statusCode == 200) {
       await fetchComplaints();
       return true;
@@ -85,7 +80,9 @@ class ComplaintProvider extends ChangeNotifier {
   }
 
   Future<bool> assignComplaint(String id, String engineerId) async {
-    final response = await _apiService.put('/complaints/$id/assign', {'engineerId': engineerId});
+    final response = await _apiService.put('/complaints/$id/assign', {
+      'engineerId': engineerId,
+    });
     if (response.statusCode == 200) {
       await fetchComplaints();
       return true;
@@ -93,16 +90,26 @@ class ComplaintProvider extends ChangeNotifier {
     return false;
   }
 
-  Future<bool> resolveComplaint(String id, String resolutionImage, double lat, double lon) async {
+  Future<Map<String, dynamic>> resolveComplaint(
+    String id,
+    String resolutionImage,
+    double lat,
+    double lon,
+  ) async {
     final response = await _apiService.put('/complaints/$id/resolve', {
       'resolutionImage': resolutionImage,
       'currentLocation': {'latitude': lat, 'longitude': lon},
     });
 
+    final data = jsonDecode(response.body);
     if (response.statusCode == 200) {
       await fetchComplaints();
-      return true;
+      return {'success': true};
     }
-    return false;
+    return {
+      'success': false,
+      'message': data['message'] ?? 'Resolution failed',
+      'distance': data['calcDistance']
+    };
   }
 }

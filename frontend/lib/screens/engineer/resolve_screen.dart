@@ -23,7 +23,12 @@ class _ResolveScreenState extends State<ResolveScreen> {
 
   Future<void> _captureProof() async {
     final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.camera);
+    final image = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 50, // Compress to 50%
+      maxWidth: 1024,   // Limit width
+      maxHeight: 1024,  // Limit height
+    );
     if (image != null) {
       setState(() {
         _image = image;
@@ -81,7 +86,7 @@ class _ResolveScreenState extends State<ResolveScreen> {
     final bytes = await File(_image!.path).readAsBytes();
     final base64Image = base64Encode(bytes);
 
-    final success = await Provider.of<ComplaintProvider>(context, listen: false).resolveComplaint(
+    final result = await Provider.of<ComplaintProvider>(context, listen: false).resolveComplaint(
       widget.complaint.id,
       base64Image,
       _currentPosition!.latitude,
@@ -89,10 +94,22 @@ class _ResolveScreenState extends State<ResolveScreen> {
     );
 
     setState(() => _isLoading = false);
-    if (success) {
+    if (result['success'] == true) {
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Distance Check Failed: You must be near the complaint location!")));
+      // The distance check failed on the server
+      final double? dist = result['distance'] != null ? result['distance'].toDouble() : null;
+      final String msg = dist != null 
+          ? "Too far! You are ${dist.toStringAsFixed(1)}m away. You must be within 30m."
+          : "Distance Check Failed: Please ensure you are at the site.";
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        )
+      );
     }
   }
 
