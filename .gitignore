@@ -1,0 +1,44 @@
+# OS / editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+backend/node_modules/
+
+# Flutter / Dart
+**/.dart_tool/
+**/.packages
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/build/
+frontend/build/
+frontend/.dart_tool/
+
+# Android / Gradle
+frontend/android/.gradle/
+frontend/android/local.properties
+
+# iOS/macOS generated artifacts
+frontend/ios/Pods/
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Flutter.podspec
+frontend/macos/Pods/
+
+# Misc generated
+frontend/coverage/
