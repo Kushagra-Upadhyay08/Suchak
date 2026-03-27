@@ -13,11 +13,11 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _employeeIdController = TextEditingController(); // For engineers
+  final _employeeIdController = TextEditingController(); // For engineers & admins
   bool _isLoading = false;
 
   void _register() async {
-    if (widget.role == 'engineer' && _employeeIdController.text.isEmpty) {
+    if ((widget.role == 'engineer' || widget.role == 'admin') && _employeeIdController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please enter your Employee ID")));
       return;
     }
@@ -29,7 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _nameController.text,
         _passwordController.text,
         widget.role,
-        employeeId: widget.role == 'engineer' ? _employeeIdController.text : null,
+        employeeId: (widget.role == 'engineer' || widget.role == 'admin') ? _employeeIdController.text : null,
       );
       if (success) {
         Navigator.pop(context); // Go back to Login
@@ -52,8 +52,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             TextField(controller: _nameController, decoration: const InputDecoration(labelText: "Full Name")),
             TextField(controller: _passwordController, decoration: const InputDecoration(labelText: "Password"), obscureText: true),
-            if (widget.role == 'engineer')
-               TextField(controller: _employeeIdController, decoration: const InputDecoration(labelText: "Employee ID (Engineer ID)")),
+            if (widget.role == 'engineer' || widget.role == 'admin')
+               TextField(controller: _employeeIdController, decoration: InputDecoration(labelText: widget.role == 'engineer' ? "Employee ID (Engineer ID)" : "Employee ID (Admin ID)")),
             const SizedBox(height: 20),
             _isLoading 
               ? const CircularProgressIndicator()
